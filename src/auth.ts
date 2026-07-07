@@ -1,12 +1,12 @@
 import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
 import Credentials from "next-auth/providers/credentials"
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import prisma from "./lib/prisma"
+import { FirestoreAdapter } from "@auth/firebase-adapter"
+import { firestore } from "./lib/firebase-admin"
 import bcrypt from "bcryptjs"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: FirestoreAdapter(firestore),
   session: { strategy: "jwt" },
   providers: [
     Google
