@@ -8,7 +8,8 @@ import { BookOpen, CheckCircle2, Circle, ExternalLink, Flame, Layers, ChevronDow
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { db } from "@/lib/firebase";
-import { doc, onSnapshot, setDoc } from "firebase/firestore";
+import { doc, onSnapshot, setDoc, getDoc } from "firebase/firestore";
+import { computeStreak, toDateKey } from "@/lib/streak";
 
 type ProgressMap = Record<string, boolean>;
 
@@ -130,11 +131,32 @@ export default function RoadmapPage() {
   const toggleProgress = async (pKey: string) => {
     if (!user || !key) return;
     
-    const newProgress = { ...progress, [pKey]: !progress[pKey] };
+    const isMarking = !progress[pKey]; // true if we're marking it complete
+    const newProgress = { ...progress, [pKey]: isMarking };
     const docRef = doc(db, "users", user.uid);
     
     try {
-      await setDoc(docRef, { progress: { [key]: newProgress }, updatedAt: new Date().toISOString() }, { merge: true });
+      // Build the update payload
+      const updateData: Record<string, any> = {
+        progress: { [key]: newProgress },
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Update streak only when marking a problem as complete (not unchecking)
+      if (isMarking) {
+        const snap = await getDoc(docRef);
+        const data = snap.exists() ? snap.data() : {};
+        const currentStreak = data.streak || 0;
+        const lastActiveDate = data.lastActiveDate || null;
+
+        const { newStreak, isNewDay } = computeStreak(currentStreak, lastActiveDate);
+        if (isNewDay) {
+          updateData.streak = newStreak;
+          updateData.lastActiveDate = toDateKey(new Date());
+        }
+      }
+
+      await setDoc(docRef, updateData, { merge: true });
     } catch (err) {
       console.error("Error updating progress:", err);
     }

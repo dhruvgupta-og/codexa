@@ -1,9 +1,7 @@
 import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
-import Credentials from "next-auth/providers/credentials"
 import { FirestoreAdapter } from "@auth/firebase-adapter"
 import { firestore } from "./lib/firebase-admin"
-import bcrypt from "bcryptjs"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: FirestoreAdapter(firestore),
