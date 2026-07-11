@@ -1,4 +1,4 @@
-﻿import type { SubjectData } from "../roadmap-data";
+import type { SubjectData } from "../roadmap-data";
 
 //  BLIND 75 
 export const blind75: SubjectData = {
@@ -536,7 +536,7 @@ export const sdeSheet: SubjectData = {
       ],
     },
     {
-      step: "Day 1314: Stack & Queue",
+      step: "Day 13–14: Stack & Queue",
       topics: [
         {
           name: "Stack Problems",
@@ -554,7 +554,7 @@ export const sdeSheet: SubjectData = {
       ],
     },
     {
-      step: "Day 1517: String Problems",
+      step: "Day 15–17: String Problems",
       topics: [
         {
           name: "String Problems",
@@ -574,7 +574,7 @@ export const sdeSheet: SubjectData = {
       ],
     },
     {
-      step: "Day 1822: Binary Trees & BST",
+      step: "Day 18–22: Binary Trees & BST",
       topics: [
         {
           name: "Binary Tree Problems",
@@ -608,7 +608,7 @@ export const sdeSheet: SubjectData = {
       ],
     },
     {
-      step: "Day 2326: Graphs",
+      step: "Day 23–26: Graphs",
       topics: [
         {
           name: "Graph Problems",
@@ -630,7 +630,7 @@ export const sdeSheet: SubjectData = {
       ],
     },
     {
-      step: "Day 2730: Dynamic Programming",
+      step: "Day 27–30: Dynamic Programming",
       topics: [
         {
           name: "DP Problems",
