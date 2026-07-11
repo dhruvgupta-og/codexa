@@ -4,14 +4,14 @@ import Topbar from "@/components/topbar";
 import { SUBJECT_MAP, type SubjectData } from "@/lib/roadmap-data";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { BookOpen, CheckCircle2, Circle, ExternalLink, Flame, Layers, ChevronDown, RotateCcw } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { BookOpen, CheckCircle2, Circle, ExternalLink, Flame, Layers, ChevronDown, RotateCcw, PenTool, Flag, Save, Loader2, PlayCircle } from "lucide-react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { db } from "@/lib/firebase";
 import { doc, onSnapshot, setDoc, getDoc } from "firebase/firestore";
 import { computeStreak, toDateKey } from "@/lib/streak";
-
-type ProgressMap = Record<string, boolean>;
+import { motion, AnimatePresence } from "framer-motion";
+import { ProgressMap, ProgressState, isSolved, getStatus, getNotes, isFlagged } from "@/lib/progress";
 
 type FlatProblem = {
   key: string;
@@ -102,6 +102,138 @@ function flattenProblems(subject: SubjectData): FlatProblem[] {
   return items;
 }
 
+
+// --- UI Components ---
+
+function ProblemRow({
+  problem,
+  pKey,
+  progressVal,
+  onUpdate,
+}: {
+  problem: any;
+  pKey: string;
+  progressVal: boolean | ProgressState | undefined;
+  onUpdate: (pKey: string, newState: Partial<ProgressState>) => void;
+}) {
+  const status = getStatus(progressVal);
+  const flag = isFlagged(progressVal);
+  const initialNotes = getNotes(progressVal);
+
+  const [showNotes, setShowNotes] = useState(false);
+  const [localNotes, setLocalNotes] = useState(initialNotes);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Sync local notes if external data changes and we aren't focused
+  useEffect(() => {
+    setLocalNotes(initialNotes);
+  }, [initialNotes]);
+
+  const handleStatusChange = (newStatus: "unstarted" | "attempted" | "solved") => {
+    onUpdate(pKey, { status: newStatus });
+  };
+
+  const handleToggleFlag = () => {
+    onUpdate(pKey, { flagRevision: !flag });
+  };
+
+  const handleSaveNotes = async () => {
+    setIsSaving(true);
+    await onUpdate(pKey, { notes: localNotes });
+    setIsSaving(false);
+  };
+
+  return (
+    <li className="flex flex-col gap-2 p-2 border-b border-border/50 last:border-0 rounded-lg hover:bg-secondary/20 transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2 flex-1">
+          {/* Status buttons */}
+          <div className="flex items-center bg-secondary/30 rounded-lg p-1 mr-2">
+            <button
+              onClick={() => handleStatusChange(status === "unstarted" ? "attempted" : "unstarted")}
+              className={`p-1.5 rounded-md transition-all ${status === "attempted" ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-500" : "hover:bg-secondary text-muted-foreground"}`}
+              title="Mark as attempted"
+            >
+              <PlayCircle className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleStatusChange(status === "solved" ? "unstarted" : "solved")}
+              className={`p-1.5 rounded-md transition-all ${status === "solved" ? "bg-green-500/20 text-green-600 dark:text-green-500" : "hover:bg-secondary text-muted-foreground"}`}
+              title="Mark as solved"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+            </button>
+          </div>
+
+          <span className={`text-sm font-medium ${status === "solved" ? "text-muted-foreground line-through" : "text-foreground"}`}>
+            {problem.name}
+          </span>
+          <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
+            {problem.difficulty}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs flex-wrap">
+          <button
+            onClick={handleToggleFlag}
+            className={`inline-flex items-center gap-1 px-2 py-1.5 rounded-md border transition-colors ${flag ? "border-orange-500 bg-orange-500/10 text-orange-600 dark:text-orange-400" : "border-border hover:bg-secondary"}`}
+          >
+            <Flag className={`w-3.5 h-3.5 ${flag ? "fill-orange-500" : ""}`} />
+            {flag ? "Revise" : "Flag"}
+          </button>
+          
+          <button
+            onClick={() => setShowNotes(!showNotes)}
+            className={`inline-flex items-center gap-1 px-2 py-1.5 rounded-md border transition-colors ${localNotes ? "border-primary/50 text-primary bg-primary/5" : "border-border hover:bg-secondary"}`}
+          >
+            <PenTool className="w-3.5 h-3.5" />
+            Notes
+          </button>
+
+          {problem.leetcode && (
+            <a href={problem.leetcode} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 px-2 py-1.5 rounded-md border border-border hover:bg-secondary transition-colors">
+              Solve <ExternalLink className="w-3 h-3" />
+            </a>
+          )}
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {showNotes && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="mt-2 bg-secondary/20 p-3 rounded-xl border border-border">
+              <textarea
+                value={localNotes}
+                onChange={(e) => setLocalNotes(e.target.value)}
+                placeholder="Write your approach, edge cases, and mistakes here..."
+                className="w-full bg-transparent text-sm text-foreground outline-none resize-y min-h-[80px]"
+              />
+              <div className="flex justify-end mt-2">
+                <button
+                  onClick={handleSaveNotes}
+                  disabled={isSaving}
+                  className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                  Save Note
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </li>
+  );
+}
+
+
+// --- Main Page ---
+
 export default function RoadmapPage() {
   const { user } = useAuth();
   const params = useParams();
@@ -128,22 +260,29 @@ export default function RoadmapPage() {
     return () => unsubscribe();
   }, [user, key]);
 
-  const toggleProgress = async (pKey: string) => {
+  const updateProgress = async (pKey: string, newState: Partial<ProgressState>) => {
     if (!user || !key) return;
-    
-    const isMarking = !progress[pKey]; // true if we're marking it complete
-    const newProgress = { ...progress, [pKey]: isMarking };
+
+    // Merge with existing state gracefully
+    const currentVal = progress[pKey];
+    let mergedState: ProgressState = {
+      status: getStatus(currentVal),
+      notes: getNotes(currentVal),
+      flagRevision: isFlagged(currentVal),
+      ...newState,
+    };
+
+    const newProgress = { ...progress, [pKey]: mergedState };
     const docRef = doc(db, "users", user.uid);
     
     try {
-      // Build the update payload
       const updateData: Record<string, any> = {
         progress: { [key]: newProgress },
         updatedAt: new Date().toISOString(),
       };
 
-      // Update streak only when marking a problem as complete (not unchecking)
-      if (isMarking) {
+      // Streak logic: if status changed to "solved"
+      if (newState.status === "solved") {
         const snap = await getDoc(docRef);
         const data = snap.exists() ? snap.data() : {};
         const currentStreak = data.streak || 0;
@@ -154,6 +293,12 @@ export default function RoadmapPage() {
           updateData.streak = newStreak;
           updateData.lastActiveDate = toDateKey(new Date());
         }
+
+        // Activity Log for Heatmap
+        const todayKey = toDateKey(new Date());
+        const activityLog = data.activityLog || {};
+        activityLog[todayKey] = (activityLog[todayKey] || 0) + 1;
+        updateData.activityLog = activityLog;
       }
 
       await setDoc(docRef, updateData, { merge: true });
@@ -178,7 +323,7 @@ export default function RoadmapPage() {
 
   const displaySubject = key === "blind75" ? limitProblems(subject, 75) : subject;
   const flat = useMemo(() => flattenProblems(displaySubject), [displaySubject]);
-  const completed = flat.filter(p => progress[p.key]).length;
+  const completed = flat.filter(p => isSolved(progress[p.key])).length;
   const total = flat.length;
   const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
   const stats = getStats(displaySubject);
@@ -207,7 +352,7 @@ export default function RoadmapPage() {
                   <span className="text-muted-foreground">{completed} / {total} ({percent}%)</span>
                 </div>
                 <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full" style={{ width: `${percent}%` }} />
+                  <div className="h-full bg-primary rounded-full transition-all duration-700" style={{ width: `${percent}%` }} />
                 </div>
               </div>
             </div>
@@ -276,7 +421,7 @@ export default function RoadmapPage() {
                 <div className="mt-5 grid gap-5">
                   {step.topics.map((topic, topicIndex) => {
                     const topicKeys = topic.problems.map((_, problemIndex) => `${stepIndex}-${topicIndex}-${problemIndex}`);
-                    const topicCompleted = topicKeys.filter(k => progress[k]).length;
+                    const topicCompleted = topicKeys.filter(k => isSolved(progress[k])).length;
                     const topicTotal = topicKeys.length;
                     const topicPercent = topicTotal === 0 ? 0 : Math.round((topicCompleted / topicTotal) * 100);
                     const topicQuery = encodeURIComponent(`${topic.name} interview questions`);
@@ -287,7 +432,7 @@ export default function RoadmapPage() {
                           <div>
                             <h3 className="font-semibold text-foreground">{topic.name}</h3>
                             <div className="text-xs text-muted-foreground mt-1">
-                              {topicCompleted} / {topicTotal} completed
+                              {topicCompleted} / {topicTotal} solved
                             </div>
                           </div>
                           <div className="flex items-center gap-2 text-xs">
@@ -310,63 +455,19 @@ export default function RoadmapPage() {
                           </div>
                         </div>
                         <div className="h-1.5 bg-secondary rounded-full overflow-hidden mb-4">
-                          <div className="h-full bg-primary rounded-full" style={{ width: `${topicPercent}%` }} />
+                          <div className="h-full bg-primary rounded-full transition-all duration-700" style={{ width: `${topicPercent}%` }} />
                         </div>
-                        <ul className="grid gap-2">
+                        <ul className="grid gap-1">
                           {topic.problems.map((problem, problemIndex) => {
                             const pKey = `${stepIndex}-${topicIndex}-${problemIndex}`;
-                            const done = !!progress[pKey];
                             return (
-                              <li key={problem.name} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    type="button"
-                                    aria-label={done ? "Mark incomplete" : "Mark complete"}
-                                    onClick={() => toggleProgress(pKey)}
-                                    className="text-primary transition-transform active:scale-90"
-                                  >
-                                    {done ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
-                                  </button>
-                                  <span className={`text-sm ${done ? "text-muted-foreground line-through" : "text-foreground"}`}>
-                                    {problem.name}
-                                  </span>
-                                  <span className="text-[11px] px-2 py-0.5 rounded-full border border-border text-muted-foreground">
-                                    {problem.difficulty}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2 text-xs">
-                                  {problem.leetcode && (
-                                    <a
-                                      href={problem.leetcode}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border hover:border-primary/60 hover:text-primary transition-colors"
-                                    >
-                                      Practice <ExternalLink className="w-3 h-3" />
-                                    </a>
-                                  )}
-                                  {problem.article && (
-                                    <a
-                                      href={problem.article}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border hover:border-primary/60 hover:text-primary transition-colors"
-                                    >
-                                      Article <ExternalLink className="w-3 h-3" />
-                                    </a>
-                                  )}
-                                  {problem.yt && (
-                                    <a
-                                      href={problem.yt}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border hover:border-primary/60 hover:text-primary transition-colors"
-                                    >
-                                      Video <ExternalLink className="w-3 h-3" />
-                                    </a>
-                                  )}
-                                </div>
-                              </li>
+                              <ProblemRow
+                                key={problem.name}
+                                problem={problem}
+                                pKey={pKey}
+                                progressVal={progress[pKey]}
+                                onUpdate={updateProgress}
+                              />
                             );
                           })}
                         </ul>

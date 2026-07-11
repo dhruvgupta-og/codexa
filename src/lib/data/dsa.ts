@@ -1,4 +1,4 @@
-﻿import type { SubjectData } from "../roadmap-data";
+import type { SubjectData } from "../roadmap-data";
 
 const dsa: SubjectData = {
   title: "DSA Roadmap (A2Z)",
@@ -128,25 +128,28 @@ const dsa: SubjectData = {
             { name: "Find Missing Number in an Array", difficulty: "Easy", leetcode: "https://leetcode.com/problems/missing-number/" },
             { name: "Maximum Consecutive Ones", difficulty: "Easy", leetcode: "https://leetcode.com/problems/max-consecutive-ones/" },
             { name: "Find the Number that Appears Once", difficulty: "Easy", leetcode: "https://leetcode.com/problems/single-number/" },
+            { name: "Find Missing Number in an Array", difficulty: "Easy", leetcode: "https://leetcode.com/problems/missing-number/", companies: ["Amazon", "Microsoft"] },
+            { name: "Maximum Consecutive Ones", difficulty: "Easy", leetcode: "https://leetcode.com/problems/max-consecutive-ones/", companies: ["Google"] },
+            { name: "Find the Number that Appears Once", difficulty: "Easy", leetcode: "https://leetcode.com/problems/single-number/", companies: ["Amazon", "Bloomberg"] },
             { name: "Longest Subarray with Sum K (positives)", difficulty: "Easy" },
           ],
         },
         {
           name: "3.2 Medium Array Problems",
           problems: [
-            { name: "Two Sum", difficulty: "Medium", leetcode: "https://leetcode.com/problems/two-sum/" },
-            { name: "Sort an Array of 0s, 1s and 2s", difficulty: "Medium", leetcode: "https://leetcode.com/problems/sort-colors/" },
-            { name: "Majority Element (n/2)", difficulty: "Medium", leetcode: "https://leetcode.com/problems/majority-element/" },
-            { name: "Kadane's Algorithm  Maximum Subarray Sum", difficulty: "Medium", leetcode: "https://leetcode.com/problems/maximum-subarray/" },
+            { name: "Two Sum", difficulty: "Easy", leetcode: "https://leetcode.com/problems/two-sum/", companies: ["Amazon", "Google", "Microsoft", "Meta"] },
+            { name: "Sort an array of 0's, 1's and 2's", difficulty: "Medium", leetcode: "https://leetcode.com/problems/sort-colors/", companies: ["Amazon", "Microsoft"] },
+            { name: "Majority Element (>n/2 times)", difficulty: "Medium", leetcode: "https://leetcode.com/problems/majority-element/", companies: ["Google", "Amazon"] },
+            { name: "Kadane's Algorithm  Maximum Subarray Sum", difficulty: "Medium", leetcode: "https://leetcode.com/problems/maximum-subarray/", companies: ["Amazon", "Microsoft", "LinkedIn"] },
             { name: "Print Subarray with Maximum Sum", difficulty: "Medium" },
-            { name: "Stock Buy And Sell", difficulty: "Medium", leetcode: "https://leetcode.com/problems/best-time-to-buy-and-sell-stock/" },
+            { name: "Stock Buy And Sell", difficulty: "Medium", leetcode: "https://leetcode.com/problems/best-time-to-buy-and-sell-stock/", companies: ["Amazon", "Bloomberg", "Google"] },
             { name: "Rearrange Array Elements by Sign", difficulty: "Medium", leetcode: "https://leetcode.com/problems/rearrange-array-elements-by-sign/" },
-            { name: "Next Permutation", difficulty: "Medium", leetcode: "https://leetcode.com/problems/next-permutation/" },
+            { name: "Next Permutation", difficulty: "Medium", leetcode: "https://leetcode.com/problems/next-permutation/", companies: ["Microsoft", "Amazon", "Meta"] },
             { name: "Leaders in an Array", difficulty: "Medium" },
-            { name: "Longest Consecutive Sequence", difficulty: "Medium", leetcode: "https://leetcode.com/problems/longest-consecutive-sequence/" },
-            { name: "Set Matrix Zeroes", difficulty: "Medium", leetcode: "https://leetcode.com/problems/set-matrix-zeroes/" },
-            { name: "Rotate Matrix by 90 degrees", difficulty: "Medium", leetcode: "https://leetcode.com/problems/rotate-image/" },
-            { name: "Spiral Traversal of Matrix", difficulty: "Medium", leetcode: "https://leetcode.com/problems/spiral-matrix/" },
+            { name: "Longest Consecutive Sequence", difficulty: "Medium", leetcode: "https://leetcode.com/problems/longest-consecutive-sequence/", companies: ["Google", "Amazon"] },
+            { name: "Set Matrix Zeroes", difficulty: "Medium", leetcode: "https://leetcode.com/problems/set-matrix-zeroes/", companies: ["Amazon", "Microsoft"] },
+            { name: "Rotate Matrix by 90 degrees", difficulty: "Medium", leetcode: "https://leetcode.com/problems/rotate-image/", companies: ["Amazon", "Apple"] },
+            { name: "Spiral Traversal of Matrix", difficulty: "Medium", leetcode: "https://leetcode.com/problems/spiral-matrix/", companies: ["Microsoft", "Amazon"] },
           ],
         },
         {

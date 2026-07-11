@@ -1,4 +1,4 @@
-﻿// Structured roadmap data for every subject
+// Structured roadmap data for every subject
 import dsaData from "./data/dsa";
 import systemDesignData from "./data/system-design";
 import csData from "./data/cs";
@@ -12,6 +12,7 @@ export type Problem = {
   article?: string;
   yt?: string;
   leetcode?: string;
+  companies?: string[];
 };
 
 export type Topic = {
